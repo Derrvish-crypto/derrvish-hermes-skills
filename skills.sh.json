@@ -1,0 +1,11 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    { "title": "Engineering discipline", "skills": ["problem-solving-protocol", "verification-before-completion", "writing-plans", "executing-plans", "brainstorming", "code-review", "receiving-code-review", "writing-skills"] },
+    { "title": "Agents & Git", "skills": ["dispatching-parallel-agents", "using-git-worktrees"] },
+    { "title": "Research", "skills": ["product-research-comparison", "france-company-registry", "russian-law-verification"] },
+    { "title": "Documents & Notes", "skills": ["json-canvas", "obsidian-markdown", "leaflet-route-map", "drawio-skill"] },
+    { "title": "Desktop Plugins", "skills": ["hermes-desktop-plugins", "hermes-composer-live-correction"] },
+    { "title": "Preferences", "skills": ["feedback-loop"] }
+  ]
+}

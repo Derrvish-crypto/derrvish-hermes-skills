@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<!-- Route-map template. Fill placeholders: __TITLE__, __TOTAL_KM__, __TOTAL_DRIVE__,
+     __STOP_COUNT__, __ARRIVAL__, __LEGEND_TITLE__, __NOTE__, __LEGS__, __COLORS__,
+     __STOPS__, __LEGEND__. LEGS geo must be [lat,lon] (OSRM returns [lon,lat] — swap it).
+     Verify injected JSON parses with the right shape before opening in a browser. -->
+<meta charset="utf-8">
+<title>__TITLE__</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html,body{margin:0;height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:#0f172a;color:#e2e8f0}
+  #wrap{display:flex;flex-direction:column;height:100%}
+  #topbar{display:flex;gap:14px;align-items:center;padding:10px 16px;background:#1e293b;flex-wrap:wrap}
+  #topbar h1{font-size:17px;margin:0;color:#f8fafc}
+  .stat{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:5px 10px;font-size:12.5px;color:#cbd5e1}
+  .stat b{color:#38bdf8;font-size:14px}
+  #main{display:flex;flex:1;min-height:0}
+  #map{flex:1;min-width:0}
+  #legend{width:430px;min-width:340px;overflow-y:auto;background:#111827;border-left:1px solid #334155;padding:14px}
+  #legend h2{font-size:16px;color:#f8fafc;margin:4px 0 10px;border-bottom:2px solid #38bdf8;padding-bottom:6px}
+  .warn{background:#78350f;border-left:4px solid #f59e0b;border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12.5px}
+  .warn b{color:#fbbf24}
+  .blk{background:#1f2937;border-left:4px solid #3b82f6;border-radius:6px;padding:9px 12px;margin-bottom:10px;font-size:12.5px;line-height:1.45}
+  .blk .time{display:inline-block;background:#1d4ed8;color:#fff;font-weight:700;font-size:11.5px;border-radius:5px;padding:2px 8px;margin-right:8px;vertical-align:middle}
+  .blk .h{font-weight:700;color:#f1f5f9;font-size:13px;display:block;margin-top:2px}
+  .blk .nav{background:#0f172a;border-radius:4px;padding:3px 7px;font-size:11.5px;color:#93c5fd;display:inline-block;margin-top:5px}
+  .blk .b{color:#d1d5db;margin-top:6px}
+  .note{font-size:11px;color:#94a3b8;margin-top:8px;line-height:1.4}
+  .note b{color:#fbbf24}
+  .lg-head{font-size:12px;color:#94a3b8;margin:10px 0 6px}
+  .lg-item{display:flex;gap:8px;align-items:baseline;font-size:12px;color:#cbd5e1;padding:3px 0;border-bottom:1px dashed #334155}
+  .lg-dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;position:relative;top:1px}
+  .lg-item b{color:#f8fafc;min-width:90px}
+  .lg-item .km{margin-left:auto;color:#7dd3fc;font-weight:600;white-space:nowrap}
+  .leaflet-popup-content-wrapper{background:#1f2937;color:#e5e7eb}
+  .leaflet-popup-tip{background:#1f2937}
+  .pp{font-size:12.5px;line-height:1.45}
+  .pp .n{font-weight:800;color:#38bdf8;font-size:13px}
+  .pp .t{color:#fbbf24;font-weight:700;margin:3px 0}
+  .marker{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;color:#fff;font-weight:800;font-size:12px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.6)}
+  @media(max-width:900px){#main{flex-direction:column}#legend{width:100%;max-height:45vh}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="topbar">
+    <h1>__TITLE__</h1>
+    <div class="stat">Всего: <b>__TOTAL_KM__ км</b></div>
+    <div class="stat">Вождение: <b>__TOTAL_DRIVE__</b></div>
+    <div class="stat">Точек: <b>__STOP_COUNT__</b></div>
+    <div class="stat">__ARRIVAL__</div>
+  </div>
+  <div id="main">
+    <div id="map"></div>
+    <div id="legend">
+      <h2>__LEGEND_TITLE__</h2>
+      <!-- optional warning block, e.g.: <div class="warn"><b>…</b> …</div> -->
+      <div id="leglist"></div>
+      <div class="lg-head">Сегменты (реальные дороги, OSRM):</div>
+      <div id="seglst"></div>
+      <div class="note">__NOTE__</div>
+    </div>
+  </div>
+</div>
+<script>
+// LEGS: [{name, km, min, geo: [[lat,lon], ...]}] — one per driving segment, in order.
+// COLORS: one hex color per leg. STOPS: [{id, lat, lon, n, name, t, d}] — markers + popups;
+// id 'start'/'end' render as big green/red badges, other ids as blue (or set per-item via s.color).
+// LB: [{t, h, nav, b}] — narrative legend blocks (time, heading, nav line, body).
+const LEGS = __LEGS__;
+const COLORS = __COLORS__;
+const STOPS = __STOPS__;
+const LB = __LEGEND__;
+
+const map = L.map('map');
+const all=[]; LEGS.forEach(l=>l.geo.forEach(c=>all.push(c)));
+map.fitBounds(L.latLngBounds(all).pad(0.05));
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
+
+LEGS.forEach((l,i)=>{
+  L.polyline(l.geo,{color:COLORS[i],weight:4,opacity:.85}).addTo(map)
+   .bindPopup(`<div class='pp'>${l.name}: <b>${l.km} км</b> · ${l.min} мин вождения</div>`);
+});
+
+STOPS.forEach(s=>{
+  const big = (s.id==='start'||s.id==='end');
+  const col = big ? (s.id==='start'?'#22c55e':'#ef4444') : (s.color || '#3b82f6');
+  const sz = big?34:26;
+  const icon = L.divIcon({className:'',html:`<div class='marker' style='background:${col};${big?"font-size:9px;width:34px;height:34px":""}'>${s.n}</div>`,iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
+  L.marker([s.lat,s.lon],{icon}).addTo(map)
+   .bindPopup(`<div class='pp'><span class='n'>${s.n}. ${s.name}</span><div class='t'>${s.t}</div>${s.d}</div>`,{maxWidth:280});
+});
+
+const ll = document.getElementById('leglist');
+LB.forEach(b=>{
+  const div=document.createElement('div'); div.className='blk';
+  let h='<span class="time">'+b.t+'</span><span class="h">'+b.h+'</span>';
+  if(b.nav) h+='<div class="nav">'+b.nav+'</div>';
+  h+='<div class="b">'+b.b+'</div>';
+  div.innerHTML=h; ll.appendChild(div);
+});
+const sl=document.getElementById('seglst');
+LEGS.forEach((l,i)=>{
+  const d=document.createElement('div'); d.className='lg-item';
+  d.innerHTML=`<span class='lg-dot' style='background:${COLORS[i]}'></span><b>${l.name}</b><span>${l.min} мин</span><span class='km'>${l.km} км</span>`;
+  sl.appendChild(d);
+});
+</script>
+</body>
+</html>
