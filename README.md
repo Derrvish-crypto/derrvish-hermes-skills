@@ -1,6 +1,6 @@
 # Derrvish Hermes Skills Tap
 
-A curated [Hermes Agent](https://hermes-agent.nousresearch.com) skills tap: 20
+A curated [Hermes Agent](https://hermes-agent.nousresearch.com) skills tap: 27
 battle-tested skills, published from real daily operation.
 
 ## Install
@@ -41,6 +41,13 @@ hermes skills install Derrvish-crypto/derrvish-hermes-skills/problem-solving-pro
 | `hermes-desktop-plugins` | Write desktop plugins that add UI panes, statusbar chips, composer middleware — plain ESM, no build step. |
 | `hermes-composer-live-correction` | Live T9-style text correction in the desktop composer: typos fixed in-place on a typing pause, RU/עברית/EN. Hard-won pitfalls: cold-start keep-alive, steer-path bypass, guard filters. Pairs with `hermes-desktop-plugins`. |
 | `writing-skills` | Author correct SKILL.md files and verify they work. |
+| `browser-harness` | Direct Chrome control via CDP — self-healing browser automation, coordinate clicks, raw CDP. |
+| `hermaguard` | Adversarial bug-hunting code review: deterministic pre-scan + 3 parallel specialist subagents + consolidator. |
+| `subagent-driven-development` | Execute plans via delegate_task subagents with 2-stage review. |
+| `spec-kit-workflow` | Spec → plan → tasks pipeline for large features. |
+| `anti-loop-discipline` | Stop agent self-loops in long or loop-prone tasks: circuit breakers, repetition guards, escalation rules. |
+| `hermes-state-db-maintenance` | Audit, clean, and compact Hermes state.db (bulk cleanup, disk reclamation, health). |
+| `windows-gpu-troubleshooting` | Diagnose and fix NVIDIA GPU issues on Windows — black screens, WHEA errors, VRAM, drivers. |
 
 ## Layout
 

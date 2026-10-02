@@ -78,7 +78,7 @@ against the live path first.
 - Cold start ≈ 15–17 s on the first request after model start; do not "fix"
   that by shrinking `max_tokens`.
 - `temperature: 0`, `max_tokens: 512`.
-- **Cold start is the #1 LIVE killer, not the endpoint.** LM Studio/NInfer
+- **Cold start is the #1 LIVE killer, not the endpoint.** the local LLM server
   unloads `:1234` after idle; the first live fix after a quiet period pays the
   ~13–17 s model-load, and by the time it answers the user has typed more, so
   the race-guard correctly DROPS the fix. On a phone this never happens because
